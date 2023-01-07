@@ -45,7 +45,7 @@ contract IdChain{
     //Store IdCards Count
     uint public idCardsCount;
 
-    constructor() public {
+    constructor() {
         idCardsCount = 0;
     }
 
