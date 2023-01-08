@@ -13,8 +13,8 @@ contract IdChain{
         string homeAddress;
         string city;
         string province;
-        uint cap;
-        uint phone;
+        string cap;
+        string phone;
         string email;
         string dataScadenza;
     }
@@ -39,13 +39,13 @@ contract IdChain{
     //un ID potrebbe essere il codice fiscale ma allo stesso tempo bisogna collegare all'address la struct
     mapping(address => IdCard) idCards;
 
-    //mapping che contiene tutti codici fiscali registrati associati all'address che l'hanno registrato
+    //mapping che contiene tutti codici fiscali registrati associati all'address che l'hanno registrato1
     mapping(string => address) registeredCF;
 
     //Store IdCards Count
     uint public idCardsCount;
 
-    constructor() {
+    constructor() public{
         idCardsCount = 0;
     }
 
@@ -54,7 +54,7 @@ contract IdChain{
     function createIdCard(string memory _name, string memory _surname,
      string memory _birthDate, string memory _birthPlace, string memory _fiscalCode,
       string memory _homeAddress, string memory _city, string memory _province,
-       uint _cap, uint _phone, string memory _email, string memory _dataScadenza) public {
+       string memory _cap, string memory _phone, string memory _email, string memory _dataScadenza) public {
         //require that the fiscalCode is not already registered
         require(registeredCF[_fiscalCode] == address(0));
         //Require a valid name
@@ -74,9 +74,9 @@ contract IdChain{
         //Require a valid province
         require(bytes(_province).length > 0);
         //Require a valid cap
-        require(_cap > 0);
+        require(bytes(_cap).length > 0);
         //Require a valid phone
-        require(_phone > 0);
+        require(bytes(_phone).length > 0);
         //Require a valid email
         require(bytes(_email).length > 0);
         //Require a valid dataScadenza
@@ -108,17 +108,22 @@ contract IdChain{
 
     //Read an IdCard
     //Non credo possa essere public per motivi di sicurezza e quindi andrebbe implementata un nuovo metodo che sfrutti l'autenticazione tramite spring
-    function readIdCard(address _address) private view returns (string memory){
+    function readIdCard(address _address) public view returns (string memory){
         //Require a valid address
         require(_address != address(0));
-        require(keccak256(abi.encodePacked(idCards[_address].dataScadenza)) > keccak256(abi.encodePacked(block.timestamp)));
+        
+        //rivedere per il controllo sulla data di scadenza; in caso possiamo farlo solo lato client e risolverla così
+        if(keccak256(abi.encodePacked(idCards[_address].dataScadenza)) < keccak256(abi.encodePacked(block.timestamp))){
+            return "Carta scaduta";
+        }
+
         //Return the IdCard
         IdCard memory idCard = idCards[_address];
         //se ti stai chiedendo perchè ho fatto una cosa del genere è perchè solidity è stupido e non permetter di ritornare più di 5 valori,
         //quindi ho dovuto concatenare tutto in una stringa e poi ritornarla e poi lato web si fa lo spacchettamento della stringa nei dati che ci servcono
-        return (string(abi.encodePacked(idCard.name,"/",idCard.surname ,"/" ,idCard.birthDate ,"/" ,idCard.birthPlace ,"/"
-          ,idCard.fiscalCode ,"/" ,idCard.homeAddress ,"/" ,idCard.city ,"/" ,idCard.province ,"/"
-           ,idCard.cap ,"/" ,idCard.phone ,"/" ,idCard.email ,"/" ,idCard.dataScadenza))) ;
+        return (string(abi.encodePacked(idCard.name,"//",idCard.surname ,"//" ,idCard.birthDate ,"//" ,idCard.birthPlace ,"//"
+          ,idCard.fiscalCode ,"//" ,idCard.homeAddress ,"//" ,idCard.city ,"//" ,idCard.province ,"//"
+           ,idCard.cap ,"//" ,idCard.phone ,"//" ,idCard.email ,"//" ,idCard.dataScadenza))) ;
     }
 
     //Authorize with IdCard
