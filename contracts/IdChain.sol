@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.2;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 contract IdChain{
 
     //Model a IdCard
@@ -16,7 +18,7 @@ contract IdChain{
         string cap;
         string phone;
         string email;
-        string dataScadenza;
+        uint dataScadenza;
     }
 
     event IdCardScaduta(
@@ -27,7 +29,12 @@ contract IdChain{
         string name,
         string surname,
         string fiscalCode,
-        string dataScadenza
+        uint dataScadenza
+    );
+
+    event controlloDataScadenza(
+        uint dataScadenza,
+        uint dataAttuale
     );
 
     
@@ -54,7 +61,7 @@ contract IdChain{
     function createIdCard(string memory _name, string memory _surname,
      string memory _birthDate, string memory _birthPlace, string memory _fiscalCode,
       string memory _homeAddress, string memory _city, string memory _province,
-       string memory _cap, string memory _phone, string memory _email, string memory _dataScadenza) public {
+       string memory _cap, string memory _phone, string memory _email) public {
         //require that the fiscalCode is not already registered
         require(registeredCF[_fiscalCode] == address(0));
         //Require a valid name
@@ -79,20 +86,21 @@ contract IdChain{
         require(bytes(_phone).length > 0);
         //Require a valid email
         require(bytes(_email).length > 0);
-        //Require a valid dataScadenza
-        require(bytes(_dataScadenza).length > 0);
 
         //Increment IdCards Count
         idCardsCount ++;
 
+        //calcola la data di scadenza
+        uint dataScadenzaInt = block.timestamp + (10 * 365 days);
+
         //Create the IdCard
-        idCards[msg.sender] = IdCard(_name, _surname, _birthDate, _birthPlace, _fiscalCode, _homeAddress, _city, _province, _cap, _phone, _email, _dataScadenza);
+        idCards[msg.sender] = IdCard(_name, _surname, _birthDate, _birthPlace, _fiscalCode, _homeAddress, _city, _province, _cap, _phone, _email, dataScadenzaInt);
 
         //Aggiunge il codice fiscale alla lista dei codici fiscali registrati
         registeredCF[_fiscalCode] = msg.sender;
 
         //Trigger an event
-        emit createdIdCard(_name, _surname, _fiscalCode,_dataScadenza);
+        emit createdIdCard(_name, _surname, _fiscalCode, dataScadenzaInt);
     }
 
     //Delete an IdCard
@@ -112,18 +120,23 @@ contract IdChain{
         //Require a valid address
         require(_address != address(0));
         
-        //rivedere per il controllo sulla data di scadenza; in caso possiamo farlo solo lato client e risolverla così
-        if(keccak256(abi.encodePacked(idCards[_address].dataScadenza)) < keccak256(abi.encodePacked(block.timestamp))){
-            return "Carta scaduta";
-        }
-
         //Return the IdCard
         IdCard memory idCard = idCards[_address];
+
+        if(bytes(idCard.name).length == 0){
+            return "La carta non esiste";
+        }
+
+        //controllo sulla data di scadenza
+        if(block.timestamp > idCard.dataScadenza){
+            return "La carta e' scaduta";
+        }
+        
         //se ti stai chiedendo perchè ho fatto una cosa del genere è perchè solidity è stupido e non permetter di ritornare più di 5 valori,
         //quindi ho dovuto concatenare tutto in una stringa e poi ritornarla e poi lato web si fa lo spacchettamento della stringa nei dati che ci servcono
         return (string(abi.encodePacked(idCard.name,"//",idCard.surname ,"//" ,idCard.birthDate ,"//" ,idCard.birthPlace ,"//"
           ,idCard.fiscalCode ,"//" ,idCard.homeAddress ,"//" ,idCard.city ,"//" ,idCard.province ,"//"
-           ,idCard.cap ,"//" ,idCard.phone ,"//" ,idCard.email ,"//" ,idCard.dataScadenza))) ;
+           ,idCard.cap ,"//" ,idCard.phone ,"//" ,idCard.email ,"//" ,Strings.toString(idCard.dataScadenza)))) ;
     }
 
     //Authorize with IdCard
@@ -131,9 +144,15 @@ contract IdChain{
     function authorize(address _address) public view returns (bool){
         //Require a valid address
         require(_address != address(0));
-        //Return the IdCard
-        //non sono pienamente sicuro su questo che l'ho trovato online, poi va testato per bene
-        return (keccak256(abi.encodePacked(idCards[_address].dataScadenza)) > keccak256(abi.encodePacked(block.timestamp)));
+        
+        IdCard memory idCard = idCards[_address];
+
+        if(block.timestamp > idCard.dataScadenza){
+            return false;
+        }else{
+            return true;
+        }
+
     }
 
 
