@@ -2,11 +2,13 @@
 pragma solidity >=0.4.2;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract IdChain{
+
+contract IdChain is AccessControl {
 
     //address admin
-    address adminAddress = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
+    bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     //Model a IdCard
     struct IdCard{
@@ -62,7 +64,8 @@ contract IdChain{
         idCardsCount = 0;
         idCards[0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
          "Avellino", "AV", "83100", "3311242336", 1642690626, "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
-
+        registeredCF["MRSNDR0022"] = 0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d;
+        _grantRole(ADMIN_ROLE,0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d);
     }
 
     //crea una nuova IdCard
@@ -146,7 +149,7 @@ contract IdChain{
         address addressToRead;
 
         //controllo su address admin
-        if(msg.sender == adminAddress){
+        if(hasRole(ADMIN_ROLE, msg.sender)){
             addressToRead = _address;
         }else{
             addressToRead = msg.sender;
