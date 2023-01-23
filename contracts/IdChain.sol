@@ -62,10 +62,10 @@ contract IdChain is AccessControl {
 
     constructor(){
         idCardsCount = 0;
-        idCards[0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
+        idCards[0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
          "Avellino", "AV", "83100", "3311242336", 1642690626, "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
-        registeredCF["MRSNDR0022"] = 0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d;
-        _grantRole(ADMIN_ROLE,0xAe58aAcc644bAd5dc2142e4D57890dc95363eB3d);
+        registeredCF["MRSNDR0022"] = 0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E;
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
 
     //crea una nuova IdCard
@@ -125,12 +125,12 @@ contract IdChain is AccessControl {
         IdCard memory idCard = idCards[msg.sender];
 
         if(bytes(idCard.name).length == 0){
-            return "La carta non esiste";
+            return "cardNotFound";
         }
 
 
         if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
-            return "Password errata";
+            return "errorPassword";
         }
 
         //Delete the IdCard
@@ -138,19 +138,21 @@ contract IdChain is AccessControl {
         //Decrement IdCards Count
         idCardsCount --;
 
-        return "Carta Eliminata con successo";
+        return "cardDeleteSuccess";
     }
 
     //Read an IdCard
     //Non credo possa essere public per motivi di sicurezza e quindi andrebbe implementata un nuovo metodo che sfrutti l'autenticazione tramite spring
-    function readIdCard(address _address, string memory _password) public view returns (string memory){
+    function readIdCard(string memory _cf, string memory _password) public view returns (string memory){
 
         //address da leggere
         address addressToRead;
 
         //controllo su address admin
         if(hasRole(ADMIN_ROLE, msg.sender)){
-            addressToRead = _address;
+            //controllo se il codice fiscale è registrato
+            require(registeredCF[_cf] != address(0));
+            addressToRead = registeredCF[_cf];
         }else{
             addressToRead = msg.sender;
         }
@@ -162,18 +164,20 @@ contract IdChain is AccessControl {
         IdCard memory idCard = idCards[addressToRead];
 
         if(bytes(idCard.name).length == 0){
-            return "La carta non esiste";
+            return "cardNotFound";
         }
 
         //require(keccak256(abi.encodePacked(idCard.password)) == keccak256(abi.encodePacked(_password)));
 
-        if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
-            return "Password errata";
+        if(!hasRole(ADMIN_ROLE, msg.sender)){
+            if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
+                return "errorPassword";
+            }
         }
 
         //controllo sulla data di scadenza
         if(block.timestamp > idCard.dataScadenza){
-            return "La carta e' scaduta, si prega di rinnovare la carta";
+            return "expireCard";
         }
         
         //se ti stai chiedendo perchè ho fatto una cosa del genere è perchè solidity è stupido e non permetter di ritornare più di 5 valori,
@@ -192,17 +196,17 @@ contract IdChain is AccessControl {
         IdCard memory idCard = idCards[msg.sender];
 
         if(bytes(idCard.name).length == 0){
-            return "La carta non esiste";
+            return "cardNotFound";
         }
 
 
         if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
-            return "Password errata";
+            return "errorPassword";
         }
 
 
         if(block.timestamp > idCard.dataScadenza){
-            return "La carta e' scaduta, si prega di rinnovare la carta";
+            return "expireCard";
         }else{
             return "Autorizzato";
         }
@@ -217,11 +221,11 @@ contract IdChain is AccessControl {
         IdCard memory idCard = idCards[msg.sender];
 
         if(bytes(idCard.name).length == 0){
-            return "La carta non esiste";
+            return "cardNotFound";
         }
 
         if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
-            return "Password errata";
+            return "errorPassword";
         }
 
         //calcola la data di scadenza
@@ -235,7 +239,7 @@ contract IdChain is AccessControl {
         //Trigger an event
         emit renewedIdCard(idCard.name, idCard.surname, idCard.fiscalCode, idCard.dataScadenza);
 
-        return "Carta rinnovata con successo";
+        return "cardRenewSuccess";
     }
 
 

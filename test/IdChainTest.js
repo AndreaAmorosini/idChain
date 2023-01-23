@@ -24,12 +24,12 @@ contract('IdChain', function(accounts) {
         idChainInstance = instance;
         return idChainInstance.createIdCard("Andrea", "Amorosini", "24/03/2000", "Avellino",
          "MRSNDR0024CAV", "Via Modestino Del Gaizo 6", "Avellino", "AV", "83100", "3311242336",
-          sha256('password'), {from: accounts[0]});
+          sha256('password'), {from: accounts[1]});
       }).then(function(receipt) {
         return idChainInstance.idCardsCount();
       }).then(function(idCardsCount) {
         assert.equal(idCardsCount, 1, "idCount is not 1");
-        return idChainInstance.readIdCard(accounts[0], sha256('password'), {from: accounts[0]});
+        return idChainInstance.readIdCard("MRSNDR0024CAV", sha256('password'), {from: accounts[1]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);
         var idCardProcess = idCard.split("//");
@@ -46,12 +46,45 @@ contract('IdChain', function(accounts) {
       });
     });
 
+        //testa l'accesso come admin
+        it("check on admin rights", function() {
+          return IdChain.deployed().then(function(instance) {
+            idChainInstance = instance;
+            return idChainInstance.readIdCard("MRSNDR0024CAV", sha256("password"), {from: accounts[0]});
+          }).then(function(idCard) {
+            console.log("IDCARD : " + idCard);
+            var idCardProcess = idCard.split("//");
+            assert.equal(idCardProcess[0], "Andrea", "name is not Andrea");
+            assert.equal(idCardProcess[1], "Amorosini", "surname is not Amorosini");
+            assert.equal(idCardProcess[2], "24/03/2000", "birthDate is not 24/03/2000");
+            assert.equal(idCardProcess[3], "Avellino", "birthPlace is not Avellino");
+            assert.equal(idCardProcess[4], "MRSNDR0024CAV", "fiscalCode is not MRSNDR0024CAV");
+            assert.equal(idCardProcess[5], "Via Modestino Del Gaizo 6", "address is not Via Modestino Del Gaizo 6");
+            assert.equal(idCardProcess[6], "Avellino", "city is not Avellino");
+            assert.equal(idCardProcess[7], "AV", "state is not AV");
+            assert.equal(idCardProcess[8], "83100", "zipCode is not 83100");
+            assert.equal(idCardProcess[9], "3311242336", "phoneNumber is not 3311242336");
+          });
+        });
+    
+
+    //test su funzionamento autenticazione password
+    it("check on password", function() {
+      return IdChain.deployed().then(function(instance) {
+        idChainInstance = instance;
+        return idChainInstance.readIdCard("MRSNDR0024CAV", sha256('pwd'), {from: accounts[1]});
+      }).then(function(idCard) {
+        console.log("IDCARD : " + idCard);
+        assert.equal(idCard, "errorPassword", "il controllo è fallito");
+      });
+    });
+
         //test per l'autenticazione di una IdCard
         it("authenticate an IdCard", function() {
           return IdChain.deployed().then(function(instance) {
             idChainInstance = instance;
           }).then(function(receipt) {
-            return idChainInstance.authorize(sha256('password'), {from: accounts[0]});
+            return idChainInstance.authorize(sha256('password'), {from: accounts[1]});
           }).then(function(receipt) {
             assert.equal(receipt, "Autorizzato", "Non autorizzato");
           });
@@ -62,15 +95,15 @@ contract('IdChain', function(accounts) {
     it("delete an IdCard", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.deleteIdCard(sha256('password'), {from: accounts[0]});
+        return idChainInstance.deleteIdCard(sha256('password'), {from: accounts[1]});
       }).then(function(receipt) {
         return idChainInstance.idCardsCount();
       }).then(function(idCardsCount) {
         assert.equal(idCardsCount, 0, "idCount is not 0");
-        return idChainInstance.readIdCard(accounts[0], sha256('password'), {from: accounts[0]});
+        return idChainInstance.readIdCard("MRSNDR0024CAV", sha256('password'), {from: accounts[1]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);
-        assert.equal(idCard, "La carta non esiste", "Non restituisce il messaggio di errore");
+        assert.equal(idCard, "cardNotFound", "Non restituisce il messaggio di errore");
       });
     });
 
@@ -79,10 +112,10 @@ contract('IdChain', function(accounts) {
     it("check on dataScadenza recuperoDati", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.readIdCard(accounts[1], sha256('password'), {from: accounts[1]});
+        return idChainInstance.readIdCard("MRSNDR0022", sha256('password'), {from: accounts[2]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);
-        assert.equal(idCard, "La carta e' scaduta, si prega di rinnovare la carta", "il controllo è fallito");
+        assert.equal(idCard, "expireCard", "il controllo è fallito");
       });
     });
 
@@ -90,9 +123,9 @@ contract('IdChain', function(accounts) {
     it("check on dataScadenza auth", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.authorize(sha256('password'), {from: accounts[1]});
+        return idChainInstance.authorize(sha256('password'), {from: accounts[2]});
       }).then(function(result) {
-        assert.equal(result, "La carta e' scaduta, si prega di rinnovare la carta", "il controllo è fallito");
+        assert.equal(result, "expireCard", "il controllo è fallito");
       });
     });
 
@@ -100,15 +133,16 @@ contract('IdChain', function(accounts) {
     it("check on rinnovoCarta", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.renewIdCard(sha256('password'), {from: accounts[1]});
+        return idChainInstance.renewIdCard(sha256('password'), {from: accounts[2]});
       }).then(function(resultRenew) {
         //console.log("RESULT : " + resultRenew);
         //assert.equal(resultRenew, "Carta rinnovata con successo", "il rinnovo è fallito");
-        return idChainInstance.authorize(sha256('password'), {from: accounts[1]});
+        return idChainInstance.authorize(sha256('password'), {from: accounts[2]});
       }).then(function(resultAuth){
         assert.equal(resultAuth, "Autorizzato", "il controllo è fallito");
       });
     });
+    
 
 
 
