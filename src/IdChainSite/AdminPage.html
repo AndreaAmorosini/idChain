@@ -2,11 +2,11 @@
 <html style="font-size: 16px;" lang="it"><head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
-    <meta name="keywords" content="Test di autorizzazione IdCard">
+    <meta name="keywords" content="Admin Page">
     <meta name="description" content="">
-    <title>AuthorizeTest</title>
+    <title>AdminPage</title>
     <link rel="stylesheet" href="nicepage.css" media="screen">
-<link rel="stylesheet" href="AuthorizeTest.css" media="screen">
+<link rel="stylesheet" href="AdminPage.css" media="screen">
     <script class="u-script" type="text/javascript" src="jquery.js" defer=""></script>
     <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
     <meta name="generator" content="Nicepage 5.3.6, nicepage.com">
@@ -21,7 +21,7 @@
 		"logo": "images/Unknown.jpg"
 }</script>
     <meta name="theme-color" content="#478ac9">
-    <meta property="og:title" content="AuthorizeTest">
+    <meta property="og:title" content="AdminPage">
     <meta property="og:type" content="website">
   </head>
   <body class="u-body u-xl-mode" data-lang="it"><header class="u-clearfix u-header u-header" id="sec-ac34"><div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
@@ -52,14 +52,15 @@
           </div>
         </nav>
       </div></header>
-    <section class="u-clearfix u-section-1" id="sec-4d6b">
+    <section class="u-clearfix u-section-1" id="sec-92c2">
       <div class="u-clearfix u-sheet u-sheet-1">
         <div class="u-clearfix u-expanded-width u-layout-wrap u-layout-wrap-1">
           <div class="u-layout">
             <div class="u-layout-col">
-              <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
+              <div class="u-container-align-center u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                 <div class="u-container-layout u-container-layout-1">
-                  <h2 class="u-align-center u-text u-text-default u-text-1">Test di autorizzazione IdCard</h2>
+                  <h2 class="u-align-center u-text u-text-default u-text-1">Admin Page</h2>
+                  <h5 class="u-align-center u-text u-text-default u-text-2">Digitare il Codice Fiscale dell'utente che si desidera visualizzare</h5>
                 </div>
               </div>
               <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-2">
@@ -67,12 +68,15 @@
                   <div class="u-align-center u-form u-form-1">
                     <form action="https://forms.nicepagesrv.com/v2/form/process" class="u-clearfix u-form-spacing-10 u-form-vertical u-inner-form" source="email" name="form" style="padding: 10px;">
                       <div class="u-form-group u-form-name">
-                        <label for="name-26ee" class="u-label">Password</label>
-                        <input type="text" placeholder="Inserisci la password" id="name-26ee" name="passwordAuth" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="">
+                        <label for="name-5301" class="u-label">Codice Fiscale</label>
+                        <input type="text" placeholder="Inserisci un CF Valido" id="name-5301" name="CF" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="">
+                      </div>
+                      <div class="u-form-email u-form-group">
+                        <label for="email-5301" class="u-label">Password</label>
+                        <input type="email" placeholder="Inserisci la password" id="email-5301" name="Password" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="">
                       </div>
                       <div class="u-align-center u-form-group u-form-submit">
-                        <a href="#" class="u-btn u-btn-submit u-button-style">Autorizza<br>
-                        </a>
+                        <a href="#" class="u-btn u-btn-submit u-button-style">Invia</a>
                         <input type="submit" value="submit" class="u-form-control-hidden">
                       </div>
                       <div class="u-form-send-message u-form-send-success"> Grazie! Il tuo messaggio è stato inviato. </div>

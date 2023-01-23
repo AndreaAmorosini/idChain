@@ -176,8 +176,10 @@ contract IdChain is AccessControl {
         }
 
         //controllo sulla data di scadenza
-        if(block.timestamp > idCard.dataScadenza){
-            return "expireCard";
+        if(!hasRole(ADMIN_ROLE, msg.sender)){
+            if(block.timestamp > idCard.dataScadenza){
+                return "expireCard";
+            }
         }
         
         //se ti stai chiedendo perchè ho fatto una cosa del genere è perchè solidity è stupido e non permetter di ritornare più di 5 valori,
