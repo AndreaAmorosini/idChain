@@ -49,7 +49,8 @@ App = {
   },
 
   initContract: function() {
-    $.getJSON('Adoption.json', function(data) {
+    // Json generato alla compilazione dello smart contract
+    $.getJSON('IdChain.json', function(data) {
       // Get the necessary contract artifact file and instantiate it with @truffle/contract
       var idChainArtifact = data;
       App.contracts.IdChain = TruffleContract(idChainArtifact);
@@ -74,21 +75,35 @@ App = {
   //  $(document).on('click', '.btn-adopt', App.handleAdopt);
   //},
 
-  readIdCard: function() {
-
-  },
-
   createIdCard: function() {
     // Da modificare i valori dell'array quando si ha un ordine finale per i form,
     // ora li ho messi a caso
-    idCardInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[2].value, form.elements[3].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[8].value, form.elements[9].value, form.elements[10].value);
+    idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
 
     return App.createLoginPage();
   },
 
-  readIdCard: function() {
-    // Come per createIdCard
+  userReadIdCard: function() {
+
     var results = idCardInstance.readIdCard(form.elements["address"].value ,form.elements[0].value, form.elements[1].value);
+
+    // Parsing della stringa ad array
+    var resultArray = results.split('//')
+
+    // Conviene cambiare come sono dati gli errori dallo smart contract
+    // perché js puó essere cambiato in runtime, mentre lo smart contract
+    // necessita di migrazione (e quindi soldi) in caso si voglia cambiare
+    // il messaggio di errore.
+    if (resultArray.length == 1) {
+      return App.createErrorPage(results);
+    }
+
+    return App.createDetailsPage(resultArray);
+  },
+
+  searchIdCard: function() {
+
+    var results = idCardInstance.readIdCard(form.elements["cf"].value, '');
 
     // Parsing della stringa ad array
     var resultArray = results.split('//')
@@ -112,17 +127,64 @@ App = {
     // Non cambia molto se e' errore o no.
     // Bisogna comunque effettuare il login di nuovo.
     App.createErrorPage(result);
-  }
-
-  handleAdopt: function(event) {
-    event.preventDefault();
-
-    var petId = parseInt($(event.target).data('id'));
-
-    /*
-     * Replace me...
-     */
   },
+
+  messageHandler: function(message) {
+    switch(message) {
+      // Errori
+      case 'errorPassword':
+        var finalmessage = "La password inserita non e' corretta.";
+        break;
+      case 'cardNotFound':
+        var finalmessage = "La carta richiesta non e' stata trovata.";
+        break;
+      case 'expireCard':
+        var finalmessage = "La carta e' scaduta, si prega di rinnovare la carta.";
+        break;
+
+      // Successo
+      case 'cardDeleteSuccess':
+        var finalmessage = "La carta e' stata rimossa con successo.";
+        break;
+      case 'Autorizzato':
+        var finalmessage = "Autorizzazione avvenuta con successo.";
+        break;
+      case 'cardRenewSuccess':
+        var finalMessage = "La carta e' stata rinnovata con successo.";
+        break;
+      case default:
+        return;
+    }
+
+  return finalMessage;
+
+    // Se si aggiunge uno spazio dedicato su ogni pagina, sarebbe possibile
+    // modificare il messaggio senza effettuare un redirect, ma non e' possibile
+    // farlo con tutte le opzioni
+    //
+    // $("#error").text(finalMessage);
+    //
+    // Per tornare alla landing page dopo aver mostrato un errore per 5 secondi:
+    //
+    // $("#error").append("\nTornerete alla pagina iniziale entro 5 secondi.")
+    // setTimeout(App.createLandingPage, 5000);
+  },
+
+//  handleAdopt: function(event) {
+//    event.preventDefault();
+//
+//    var petId = parseInt($(event.target).data('id'));
+//
+//    /*
+//     * Replace me...
+//     */
+//  },
+
+  authorizeRequest: function() {
+    var password = form.elements["password"];
+
+    return idCardInstance.authorize(password);
+  }
 
   createLandingPage: function () {
     // Pagina iniziale, come e' fatta ora.
@@ -131,7 +193,7 @@ App = {
     // Il contratto dovrebbe caricare automaticamente il file index.html: aggiungendo un id #page e' possibile
     // riutilizzare sempre la stessa pagina, rimpiazzando gli elementi con id #page.
     // Da vedere se utilizzare redirect al posto di load
-    //
+
     // Inoltre, bisogna vedere come fare la pagina dell'amministratore.
 
     // Binding dei pulsanti
@@ -145,8 +207,8 @@ App = {
 
     $("#page").load("../loginPage.html");
 
-    // Effettua il binding della funzione readIdCard al pulsante per il login
-    $(document).on('click', '.btn-readIdCard', App.readIdCard);
+    // Effettua il binding della funzione userReadIdCard al pulsante per il login
+    $(document).on('click', '.btn-readIdCard', App.userReadIdCard);
 
     // Effettua il binding della funzione createRegistrationPage al pulsante per il redirect alla pagina di registrazione
     //$(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
@@ -180,8 +242,8 @@ App = {
     // Aggiunta dei binding sul pulsante di eliminazione e di rinnovo della carta
     // Classi: .btn-deleteIdCard, .btn-renewIdCard
     // Fanno parte di un form dove e' presente un box per la password
-    $(document).on('click', '.btn-deleteIdCard', App.deleteIdCard)
-    $(document).on('click', '.btn-renewIdCard', App.renewIdCard)
+    $(document).on('click', '.btn-deleteIdCard', App.deleteIdCard);
+    $(document).on('click', '.btn-renewIdCard', App.renewIdCard);
   }
 
   createErrorPage: function(error) {
@@ -197,10 +259,9 @@ App = {
     // Viene dunque mostrato il messaggio di errore tramite js.
 
     $("#page").load("../errorPage.html");
-    $("#error").text(error);
+    $("#error").text(App.messageHandler(error));
 
-    if(error == "La carta e' scaduta, si prega di rinnovare la carta") {
-      // Aggiungere pulsante di rinnovo pagina, messa un po' come placeholder
+    // Aggiungere pulsante di rinnovo pagina, messa un po' come placeholder
       // Si potrebbe fare una pagina solo per mostrare
       // il messaggio di errore della scadenza (ed e' anche gia' fatta)
       // In quel caso meglio creare una nuova funzione.
