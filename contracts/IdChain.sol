@@ -22,7 +22,6 @@ contract IdChain is AccessControl {
         string province;
         string cap;
         string phone;
-        //string email;
         uint dataScadenza;
         string password;
     }
@@ -48,10 +47,8 @@ contract IdChain is AccessControl {
     
 
     //Store the IdCards
-    //Utilizza gli address come chiave ma potrebbe non essere ottimale
-    //bisogna prevedere un sistema per evitare che una stessa IdCard venga associata a due address diversi
+    //Utilizza gli address come chiave
     //non public per evitare che si possano vedere tutte le IdCards di altre persone
-    //un ID potrebbe essere il codice fiscale ma allo stesso tempo bisogna collegare all'address la struct
     mapping(address => IdCard) private idCards;
 
     //mapping che contiene tutti codici fiscali registrati associati all'address che l'hanno registrato1
@@ -62,14 +59,15 @@ contract IdChain is AccessControl {
 
     constructor(){
         idCardsCount = 0;
+        //Crea una IdCard già scaduta per testare il controllo sulla data di scadenza
         idCards[0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
          "Avellino", "AV", "83100", "3311242336", 1642690626, "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
         registeredCF["MRSNDR0022"] = 0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E;
+        //aggiunge l'address che ha creato il contratto come admin
         _grantRole(ADMIN_ROLE, msg.sender);
     }
 
     //crea una nuova IdCard
-    //dobbiamo idearci una verifica dell'identità o qualcosa del genere senò ci dirà che non è sicuro
     function createIdCard(string memory _name, string memory _surname,
      string memory _birthDate, string memory _birthPlace, string memory _fiscalCode,
       string memory _homeAddress, string memory _city, string memory _province,
@@ -96,8 +94,6 @@ contract IdChain is AccessControl {
         require(bytes(_cap).length > 0);
         //Require a valid phone
         require(bytes(_phone).length > 0);
-        //Require a valid email
-        //require(bytes(_email).length > 0);
 
         //Increment IdCards Count
         idCardsCount ++;
@@ -117,7 +113,6 @@ contract IdChain is AccessControl {
     }
 
     //Delete an IdCard
-    //pure qui credo vadano messe delle misure di sicurezza ulteriori
     function deleteIdCard(string memory _password) public returns (string memory) {
         //Require a valid address
         require(msg.sender != address(0));
@@ -142,7 +137,6 @@ contract IdChain is AccessControl {
     }
 
     //Read an IdCard
-    //Non credo possa essere public per motivi di sicurezza e quindi andrebbe implementata un nuovo metodo che sfrutti l'autenticazione tramite spring
     function readIdCard(string memory _cf, string memory _password) public view returns (string memory){
 
         //address da leggere
@@ -167,8 +161,7 @@ contract IdChain is AccessControl {
             return "cardNotFound";
         }
 
-        //require(keccak256(abi.encodePacked(idCard.password)) == keccak256(abi.encodePacked(_password)));
-
+        //controllo sulla password
         if(!hasRole(ADMIN_ROLE, msg.sender)){
             if(keccak256(abi.encodePacked(idCard.password)) != keccak256(abi.encodePacked(_password))){
                 return "errorPassword";
@@ -182,15 +175,13 @@ contract IdChain is AccessControl {
             }
         }
         
-        //se ti stai chiedendo perchè ho fatto una cosa del genere è perchè solidity è stupido e non permetter di ritornare più di 5 valori,
-        //quindi ho dovuto concatenare tutto in una stringa e poi ritornarla e poi lato web si fa lo spacchettamento della stringa nei dati che ci servcono
         return (string(abi.encodePacked(idCard.name,"//",idCard.surname ,"//" ,idCard.birthDate ,"//" ,idCard.birthPlace ,"//"
           ,idCard.fiscalCode ,"//" ,idCard.homeAddress ,"//" ,idCard.city ,"//" ,idCard.province ,"//"
            ,idCard.cap ,"//" ,idCard.phone ,"//" ,Strings.toString(idCard.dataScadenza)))) ;
     }
 
     //Authorize with IdCard
-    //Metodo a cui viene passato l'address e che va a verificare la scadenza della card e restituisce un boolean
+    //Metodo a cui viene passato l'address e che va a verificare la scadenza della card e restituisce un messaggio
     function authorize(string memory _password) public view returns (string memory){
         //Require a valid address
         require(msg.sender != address(0));
