@@ -152,7 +152,7 @@ App = {
       case 'cardRenewSuccess':
         var finalMessage = "La carta e' stata rinnovata con successo.";
         break;
-      case default:
+      default:
         return;
     }
 
@@ -184,7 +184,7 @@ App = {
     var password = form.elements["password"];
 
     return idCardInstance.authorize(password);
-  }
+  },
 
   createLandingPage: function () {
     // Pagina iniziale, come e' fatta ora.
@@ -199,7 +199,7 @@ App = {
     // Binding dei pulsanti
     $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
     $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
-  }
+  },
 
   createLoginPage: function() {
     // Un pulsante per il submit con classe .btn-readIdCard
@@ -221,7 +221,7 @@ App = {
 
     $("#page").load("../registrationPage.html");
     $(document).on('click', '.btn-register', App.createIdCard);
-  }
+  },
 
   createDetailsPage: function(details) {
     // Creazione della pagina di visualizzazione dei dati.
@@ -244,7 +244,7 @@ App = {
     // Fanno parte di un form dove e' presente un box per la password
     $(document).on('click', '.btn-deleteIdCard', App.deleteIdCard);
     $(document).on('click', '.btn-renewIdCard', App.renewIdCard);
-  }
+  },
 
   createErrorPage: function(error) {
     // Creazione della pagina di errore. Viene chiamata se la carta non esiste, la password e' errata,
@@ -271,8 +271,7 @@ App = {
       // il nome dell'errore, come "passwordErrata" o "cartaScaduta"
       $(document).on('click', 'btn-renewIdCard', App.renewIdCard);
     }
-  }
-};
+  };
 
 $(function() {
   $(window).load(function() {
