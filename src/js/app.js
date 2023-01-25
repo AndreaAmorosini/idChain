@@ -189,16 +189,21 @@ App = {
     // Da vedere se utilizzare redirect al posto di load
 
     // Inoltre, bisogna vedere come fare la pagina dell'amministratore.
-    $(document).on('click', '.btn-redirToLanding', App.createLandingPage)
-    //if(idCardInstance.isAdmin()) {
-    //  $("#page").load("./html/LandingPage.html");
-    //  $(document).on('click', '.btn-submitSearch', App.searchIdCard);
-    //}
-    //else {
-      $("#page").load("./html/LandingPage.html")
-      $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
-      $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
-    //}
+    App.contracts.IdChain.deployed().then(function(instance) {
+      var form = document.loginForm;
+      var idChainInstance = instance;
+      return idChainInstance.isAdmin();
+    }).then(function(boolIsAdmin) {
+      $(document).on('click', '.btn-redirToLanding', App.createLandingPage)
+      if(boolIsAdmin) {
+        $("#page").load("./html/LandingPage.html");
+        $(document).on('click', '.btn-submitSearch', App.searchIdCard);
+      }
+      else {
+        $("#page").load("./html/LandingPage.html")
+        $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
+        $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
+      }
   },
 
   createLoginPage: function() {
