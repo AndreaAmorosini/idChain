@@ -144,6 +144,16 @@ contract('IdChain', function(accounts) {
     });
     
 
+    //testa la funzione di riconoscimento admin
+    it("check on admin recognition", function() {
+      return IdChain.deployed().then(function(instance) {
+        idChainInstance = instance;
+        return idChainInstance.isAdmin({from: accounts[0]});
+      }).then(function(result) {
+        assert.equal(result, true, "il controllo è fallito");
+      });
+    });
+
 
 
 

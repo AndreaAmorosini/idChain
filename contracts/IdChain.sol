@@ -235,6 +235,10 @@ contract IdChain is AccessControl {
         return "cardRenewSuccess";
     }
 
+    function isAdmin() public view returns (bool){
+        return hasRole(ADMIN_ROLE, msg.sender);
+    }
+
 
 
 
