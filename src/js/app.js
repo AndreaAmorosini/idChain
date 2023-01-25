@@ -46,9 +46,9 @@ App = {
       App.contracts.IdChain.deployed().then(function(instance) {
         idCardInstance = instance;
       })
-    });
+    }).then(function() { return App.createLandingPage(); });
 
-    return App.createLandingPage();
+
   },
 
   //bindEvents: function() {
@@ -204,6 +204,7 @@ App = {
         $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
         $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
       }
+    });
   },
 
   createLoginPage: function() {
