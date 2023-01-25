@@ -3,23 +3,6 @@ App = {
   contracts: {},
 
   init: async function() {
-    // Load pets.
-    //$.getJSON('../pets.json', function(data) {
-      //var petsRow = $('#petsRow');
-      //var petTemplate = $('#petTemplate');
-
-      //for (i = 0; i < data.length; i ++) {
-      //  petTemplate.find('.panel-title').text(data[i].name);
-      //  petTemplate.find('img').attr('src', data[i].picture);
-      //  petTemplate.find('.pet-breed').text(data[i].breed);
-      //  petTemplate.find('.pet-age').text(data[i].age);
-      //  petTemplate.find('.pet-location').text(data[i].location);
-      //  petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
-
-      //  petsRow.append(petTemplate.html());
-      //}
-    //});
-
     return await App.initWeb3();
   },
 
@@ -44,7 +27,7 @@ App = {
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
     }
     web3 = new Web3(App.web3Provider);
-
+    web3.eth.defaultAccount = web3.eth.accounts[0];
     return App.initContract();
   },
 
@@ -58,15 +41,12 @@ App = {
       // Set the provider for our contract
       App.contracts.IdChain.setProvider(App.web3Provider);
 
+      var idCardInstance;
+
+      App.contracts.IdChain.deployed().then(function(instance) {
+        idCardInstance = instance;
+      })
     });
-
-    var idCardInstance;
-
-    App.contracts.IdChain.deployed().then(function(instance) {
-      idCardInstance = instance;
-    }).then(function() {
-
-    })
 
     return App.createLandingPage();
   },
@@ -74,35 +54,55 @@ App = {
   //bindEvents: function() {
   //  $(document).on('click', '.btn-adopt', App.handleAdopt);
   //},
+  getInstance: function() {
+    var idCardInstance = App.contracts.IdChain.deployed().then(function(instance) {
+      return instance;
+    })
+    return idCardInstance;
+  },
 
   createIdCard: function() {
-    // Da modificare i valori dell'array quando si ha un ordine finale per i form,
-    // ora li ho messi a caso
-    idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
 
-    return App.createLoginPage();
+    var form = document.registrationForm;
+
+    var idCardInstance = App.getInstance();
+
+    //idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
+    // Non metto gli id perché gli elementi hanno giá id a caso
+    //idCardInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+
+    App.contracts.IdChain.deployed().then(function(instance) {
+      var form = document.registrationForm;
+      return instance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+    }).then(function() {
+      return App.createLoginPage();
+    })
+
   },
 
   userReadIdCard: function() {
+    var idCardInstance = App.getInstance();
+    var form = document.loginForm;
+    
+    //var results = idCardInstance.readIdCard('', form.elements[0].value);
 
-    var results = idCardInstance.readIdCard(form.elements["address"].value ,form.elements[0].value, form.elements[1].value);
-
-    // Parsing della stringa ad array
-    var resultArray = results.split('//')
-
-    // Conviene cambiare come sono dati gli errori dallo smart contract
-    // perché js puó essere cambiato in runtime, mentre lo smart contract
-    // necessita di migrazione (e quindi soldi) in caso si voglia cambiare
-    // il messaggio di errore.
-    if (resultArray.length == 1) {
-      return App.createErrorPage(results);
-    }
-
-    return App.createDetailsPage(resultArray);
+    App.contracts.IdChain.deployed().then(function(instance) {
+      var form = document.loginForm;
+      var idChainInstance = instance;
+      return idChainInstance.readIdCard('', form.elements[0].value);
+    }).then(function(results) {
+      details = results.split('//');
+      if (details.length == 1) {
+        return App.createErrorPage();
+      }
+      return App.createDetailsPage();
+    })
   },
 
   searchIdCard: function() {
+    var idCardInstance = App.getInstance();
 
+    var form = document.loginForm;
     var results = idCardInstance.readIdCard(form.elements["cf"].value, '');
 
     // Parsing della stringa ad array
@@ -113,7 +113,7 @@ App = {
     // necessita di migrazione (e quindi soldi) in caso si voglia cambiare
     // il messaggio di errore.
     if (resultArray.length == 1) {
-      return App.createErrorPage(results);
+      return App.createErrorPage(resultArray);
     }
 
     return App.createDetailsPage(resultArray);
@@ -121,6 +121,8 @@ App = {
 
   renewIdCard: function() {
     var password = form.elements[0].value;
+
+    var idCardInstance = App.getInstance();
 
     result = idCardInstance.renewIdCard(password);
     // Sfrutto la pagina per l'errore per mostrare il messaggio di risposta,
@@ -170,18 +172,10 @@ App = {
     // setTimeout(App.createLandingPage, 5000);
   },
 
-//  handleAdopt: function(event) {
-//    event.preventDefault();
-//
-//    var petId = parseInt($(event.target).data('id'));
-//
-//    /*
-//     * Replace me...
-//     */
-//  },
-
   authorizeRequest: function() {
     var password = form.elements["password"];
+
+    var idCardInstance = App.getInstance();
 
     return idCardInstance.authorize(password);
   },
@@ -195,17 +189,23 @@ App = {
     // Da vedere se utilizzare redirect al posto di load
 
     // Inoltre, bisogna vedere come fare la pagina dell'amministratore.
-
-    // Binding dei pulsanti
-    $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
-    $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
+    $(document).on('click', '.btn-redirToLanding', App.createLandingPage)
+    //if(idCardInstance.isAdmin()) {
+    //  $("#page").load("./html/LandingPage.html");
+    //  $(document).on('click', '.btn-submitSearch', App.searchIdCard);
+    //}
+    //else {
+      $("#page").load("./html/LandingPage.html")
+      $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
+      $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
+    //}
   },
 
   createLoginPage: function() {
     // Un pulsante per il submit con classe .btn-readIdCard
     // e un altro pulsante con classe .btn-redirToRegistration per il redirect alla pagina di registrazione.
 
-    $("#page").load("../loginPage.html");
+    $("#page").load("./html/LoginPage.html");
 
     // Effettua il binding della funzione userReadIdCard al pulsante per il login
     $(document).on('click', '.btn-readIdCard', App.userReadIdCard);
@@ -219,31 +219,35 @@ App = {
     // Avviene tramite caricamento di un file html, che rimpiazza i contenuti di #page
     // E' presente un form con un pulsante con classe .btn-register
 
-    $("#page").load("../registrationPage.html");
+    $("#page").load("./html/RegisterPage.html");
     $(document).on('click', '.btn-register', App.createIdCard);
+
+    
   },
 
-  createDetailsPage: function(details) {
+  createDetailsPage: function() {
     // Creazione della pagina di visualizzazione dei dati.
     // Si effettua l'accesso a questa pagina tramite registrazione o login.
-    $("#page").load("../detailsPage.html");
+    $("#page").load("./html/DetailsPage.html", function() {
+      console.log(details);
+      $("#name-a4d5").val(details[0]);
+      $('#surname-a4d5').val(details[1]);
+      $('#date-3062').val(details[2]);
+      $('#text-ec06').val(details[3]);
+      $('#fiscCode').val(details[4]);
+      $('#address-662c').val(details[5]);
+      $('#text-1575').val(details[6]);
+      $('#text-6504').val(details[7]);
+      $('#text-1ea9').val(details[8]);
+      $('#phone-894b').val(details[9]);
+    });
     // Aggiunta dei dati tramite jquery e id di elementi html
-    $('#name').text(details[0]);
-    $('#surname').text(details[1]);
-    $('#birthDate').text(details[2]);
-    $('#birthPlace').text(details[3]);
-    $('#fiscalCode').text(details[4]);
-    $('#homeAddress').text(details[5]);
-    $('#city').text(details[6]);
-    $('#province').text(details[7]);
-    $('#cap').text(details[8]);
-    $('#phone').text(details[9]);
 
     // Aggiunta dei binding sul pulsante di eliminazione e di rinnovo della carta
     // Classi: .btn-deleteIdCard, .btn-renewIdCard
     // Fanno parte di un form dove e' presente un box per la password
-    $(document).on('click', '.btn-deleteIdCard', App.deleteIdCard);
-    $(document).on('click', '.btn-renewIdCard', App.renewIdCard);
+    //$(document).on('click', '.btn-deleteIdCard', App.deleteIdCard);
+    //$(document).on('click', '.btn-renewIdCard', App.renewIdCard);
   },
 
   createErrorPage: function(error) {
@@ -259,7 +263,7 @@ App = {
     // Viene dunque mostrato il messaggio di errore tramite js.
 
     $("#page").load("../errorPage.html");
-    $("#error").text(App.messageHandler(error));
+    App.addInlineMessage(error);
 
     // Aggiungere pulsante di rinnovo pagina, messa un po' come placeholder
       // Si potrebbe fare una pagina solo per mostrare
@@ -270,11 +274,22 @@ App = {
       // Si potrebbe utilizzare un int, enum o anche semplicemente una stringa con
       // il nome dell'errore, come "passwordErrata" o "cartaScaduta"
       $(document).on('click', 'btn-renewIdCard', App.renewIdCard);
-    }
-  };
+  },
+
+  addInlineMessage: function(message) {
+    return $("#message").text(App.messageHandler(message));
+  }
+};
+
+//$(function() {
+//  $(window).load(function() {
+//    App.init();
+//  });
+//});
+var details = null;
 
 $(function() {
-  $(window).load(function() {
+  $(document).ready(function() {
     App.init();
   });
 });
