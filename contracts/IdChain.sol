@@ -118,6 +118,7 @@ contract IdChain is AccessControl {
         require(msg.sender != address(0));
 
         IdCard memory idCard = idCards[msg.sender];
+        string memory cf = idCard.fiscalCode;
 
         if(bytes(idCard.name).length == 0){
             return "cardNotFound";
@@ -130,6 +131,7 @@ contract IdChain is AccessControl {
 
         //Delete the IdCard
         delete idCards[msg.sender];
+        delete registeredCF[cf];
         //Decrement IdCards Count
         idCardsCount --;
 
