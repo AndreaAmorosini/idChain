@@ -96,7 +96,7 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.searchForm;
       var idChainInstance = instance;
-      return idChainInstance.readIdCard.call(form.elements["password"].value, '');
+      return idChainInstance.readIdCard.call(form.elements["cf"].value, '');
     }).then(function(results) {
       details = results.split('//');
       if (details.length == 1) {
