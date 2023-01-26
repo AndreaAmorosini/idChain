@@ -51,36 +51,30 @@ App = {
 
   },
 
-  //bindEvents: function() {
-  //  $(document).on('click', '.btn-adopt', App.handleAdopt);
-  //},
-  getInstance: function() {
-    var idCardInstance = App.contracts.IdChain.deployed().then(function(instance) {
-      return instance;
-    })
-    return idCardInstance;
-  },
-
   createIdCard: function() {
 
     //idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
-    // Non metto gli id perché gli elementi hanno giá id a caso
-    //idCardInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+
     var form = document.registrationForm;
     if(form[10].value != form[11].value) {
-      return App.addInlineMessage("Le password non combaciano");
+      message = "passwordNoMatch";
+      App.addInlineMessage();
+      return;
     }
 
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.registrationForm;
-      return instance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+      var idChainInstance = instance;
+      return idChainInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
     }).then(function() {
+      message = "cardCreated";
       return App.createLoginPage();
-    })
+    });
 
   },
 
   userReadIdCard: function() {
+    // Funzione chiamata dall'utente per vedere la propria idCard
 
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.loginForm;
@@ -89,24 +83,28 @@ App = {
     }).then(function(results) {
       details = results.split('//');
       if (details.length == 1) {
-        return App.createErrorPage(details[0]);
+        message = details[0];
+        return App.createErrorPage();
       }
       return App.createDetailsPage();
     })
   },
 
   searchIdCard: function() {
+    // Funzione chiama dall'admin quando cerca una idCard
+
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.searchForm;
       var idChainInstance = instance;
-      return idChainInstance.readIdCard.call(form.elements[0].value, form.elements[1].value);
+      return idChainInstance.readIdCard.call(form.elements["password"].value, '');
     }).then(function(results) {
       details = results.split('//');
       if (details.length == 1) {
-        return App.createErrorPage(details[0]);
+        message = details[0];
+        return App.createErrorPage();
       }
       else {
-        return App.createDetailsPage();
+        return App.createDetailsPage(true);
       }
     });
   },
@@ -115,10 +113,23 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.deleteForm;
       var idChainInstance = instance;
-      var message = idChainInstance.deleteIdCard(form[0].value);
-      App.createErrorPage(message);
+      return idChainInstance.authorize.call(form[0].value);
+    }).then(function(response) {
+      message = response;
+      if(message != "Autorizzato") {
+        return App.addInlineMessage();
+      } else {
+        message = null;
+        App.contracts.IdChain.deployed().then(function(instance) {
+          var form = document.deleteForm;
+          var idChainInstance = instance;
+          return idChainInstance.deleteIdCard(form[0].value);
+        }).then(function(response) {
+          message = response;
+          App.createLandingPage();
+      });
+    }
     });
-  
   },
 
   renewIdCard: function() {
@@ -126,8 +137,9 @@ App = {
       var form = document.renewForm;
       var idChainInstance = instance;
       return idChainInstance.renewIdCard(form["password"].value);
-    }).then(function(message) {
-      App.createErrorPage(message);
+    }).then(function(response) {
+      message = response;
+      App.createLoginPage();
     })
   },
 
@@ -144,8 +156,14 @@ App = {
       case 'expireCard':
         finalMessage = "La carta e' scaduta, si prega di rinnovare la carta.";
         break;
+      case 'passwordNoMatch':
+        finalMessage = "Le password non combaciano.";
+        break;
 
       // Successo
+      case 'cardCreated':
+        finalMessage = "La carta e' stata creata con successo.";
+        break;
       case 'cardDeleteSuccess':
         finalMessage = "La carta e' stata rimossa con successo.";
         break;
@@ -156,7 +174,7 @@ App = {
         finalMessage = "La carta e' stata rinnovata con successo.";
         break;
       default:
-        return "Nessun messaggio";
+        return null;
     }
 
     return finalMessage;
@@ -168,11 +186,12 @@ App = {
       var idChainInstance = instance;
       return idChainInstance.authorize.call(form["password"].value);
     }).then(function(response) {
-      App.createErrorPage(response);
+      message = response;
+      App.addInlineMessage(message);
     });
   },
 
-  createLandingPage: function () {
+  createLandingPage: function() {
     // Pagina iniziale, come e' fatta ora.
     // Ha due pulsanti: uno per il login e uno per la registrazione.
     // Avviene tramite caricamento di un file html.
@@ -186,12 +205,18 @@ App = {
       if(boolIsAdmin == true) {
         $("#page").load("./html/AdminPage.html", function() {
           $(document).on('click', '.btn-submitSearch', App.searchIdCard);
+          if(message) {
+            App.addInlineMessage();
+          }
         });
       }
       else {
         $("#page").load("./html/LandingPage.html", function() {
           $(document).on('click', '.btn-redirToLogin', App.createLoginPage);
           $(document).on('click', '.btn-redirToRegistration', App.createRegistrationPage);
+          if(message) {
+            App.addInlineMessage();
+          }
         });
       }
     });
@@ -203,6 +228,9 @@ App = {
 
     $("#page").load("./html/LoginPage.html", function() {
       $('.btn-readIdCard').click(App.userReadIdCard);
+      if(message) {
+        App.addInlineMessage();
+      }
     });
 
     // Effettua il binding della funzione userReadIdCard al pulsante per il login
@@ -222,10 +250,16 @@ App = {
     });
   },
 
-  createDetailsPage: function() {
+  createDetailsPage: function(isAdmin = false) {
     // Creazione della pagina di visualizzazione dei dati.
     // Si effettua l'accesso a questa pagina tramite registrazione o login.
-    $("#page").load("./html/DetailsPage.html", function() {
+    var pageToLoad;
+    if(isAdmin) {
+      pageToLoad = "./html/AdminDetailsPage.html";
+    } else {
+      pageToLoad = "./html/DetailsPage.html";
+    }
+    $("#page").load(pageToLoad, function() {
       $("#name-a4d5").val(details[0]);
       $('#surname-a4d5').val(details[1]);
       $('#date-3062').val(details[2]);
@@ -236,9 +270,11 @@ App = {
       $('#text-6504').val(details[7]);
       $('#text-1ea9').val(details[8]);
       $('#phone-894b').val(details[9]);
-      
-      $('.btn-deleteIdCard').click(App.createDeletePage);
-      $('.btn-authorizeIdCard').click(App.createAuthorizePage);
+
+      if(!isAdmin) {
+        $('.btn-deleteIdCard').click(App.createDeletePage);
+        $('.btn-authorizeIdCard').click(App.createAuthorizePage);
+      }
     });
     // Aggiunta dei dati tramite jquery e id di elementi html
 
@@ -253,32 +289,22 @@ App = {
     });
   },
 
-  createErrorPage: function(error) {
+  createErrorPage: function() {
     // Creazione della pagina di errore. Viene chiamata se la carta non esiste, la password e' errata,
     // La carta e' scaduta etc...
     // Viene data in input una stringa contenente l'errore, che sostituira'
     // l'elemento con l'id #error nel file html.
-    //
-    // Sarebbe possibile sennó aggiungere uno spazio dedicato agli errori sulle pagine
-    // sulle quali si trova l'utente prima di avere l'errore.
-    // In particolare, secondo me gli errori dovrebbero essere mostrati solo sulla
-    // pagina di login
-    // Viene dunque mostrato il messaggio di errore tramite js.
-
-    //$("#page").load("../errorPage.html");
-
-    if(error == "expireCard") {
+    if(message == "expireCard") {
       return createRenewPage();
     }
-    var fullError = App.messageHandler(error);
-    App.addInlineMessage(fullError);
+    App.addInlineMessage();
 
     // Per tornare alla landing page dopo aver mostrato un errore per 5 secondi:
     //
     // $("#error").append("\nTornerete alla pagina iniziale entro 5 secondi.")
     // setTimeout(App.createLandingPage, 5000);
 
-//    $(document).on('click', 'btn-renewIdCard', App.renewIdCard);
+    //    $(document).on('click', 'btn-renewIdCard', App.renewIdCard);
   },
 
   createRenewPage: function() {
@@ -293,8 +319,12 @@ App = {
     })
   },
 
-  addInlineMessage: function(message) {
-    $("#message").text(message);
+  addInlineMessage: function() {
+    if(message) {
+      console.log(message);
+      $("#message").text(App.messageHandler(message));
+      message = null;
+    }
   }
 };
 
@@ -304,6 +334,7 @@ App = {
 //  });
 //});
 var details = "cardNotFound";
+var message = null;
 
 $(function() {
   $(document).ready(function() {
