@@ -148,7 +148,7 @@ App = {
     var finalMessage;
     if(typeof(message) == "object") {
 
-      return "La carta e' stata rimossa con successo.";
+      return "L'operazione è avvenuta con successo";
     }
     switch(message) {
       // Errori
@@ -300,7 +300,7 @@ App = {
     // Viene data in input una stringa contenente l'errore, che sostituira'
     // l'elemento con l'id #error nel file html.
     if(message == "expireCard") {
-      return createRenewPage();
+      return App.createRenewPage();
     }
     App.addInlineMessage();
 

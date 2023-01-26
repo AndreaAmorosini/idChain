@@ -61,7 +61,7 @@ contract IdChain is AccessControl {
         idCardsCount = 0;
         //Crea una IdCard già scaduta per testare il controllo sulla data di scadenza
         idCards[0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
-         "Avellino", "AV", "83100", "3311242336", 1642690626, "a1159e9df3670d549d04524532629f5477ceb7deec9b45e47e8c009506ecb2c8");
+         "Avellino", "AV", "83100", "3311242336", 1642690626, "0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b");
         registeredCF["MRSNDR0022"] = 0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E;
         //aggiunge l'address che ha creato il contratto come admin
         _grantRole(ADMIN_ROLE, msg.sender);
