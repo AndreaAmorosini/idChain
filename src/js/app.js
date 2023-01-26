@@ -65,7 +65,7 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.registrationForm;
       var idChainInstance = instance;
-      return idChainInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+      return idChainInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, web3.sha3(form.elements[10].value));
     }).then(function() {
       message = "cardCreated";
       return App.createLoginPage();
@@ -76,10 +76,11 @@ App = {
   userReadIdCard: function() {
     // Funzione chiamata dall'utente per vedere la propria idCard
 
+    event.preventDefault();
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.loginForm;
       var idChainInstance = instance;
-      return idChainInstance.readIdCard.call('', form.elements[0].value);
+      return idChainInstance.readIdCard.call('', web3.sha3(form.elements[0].value));
     }).then(function(results) {
       details = results.split('//');
       if (details.length == 1) {
@@ -113,7 +114,7 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.deleteForm;
       var idChainInstance = instance;
-      return idChainInstance.authorize.call(form[0].value);
+      return idChainInstance.authorize.call(web3.sha3(form[0].value));
     }).then(function(response) {
       message = response;
       if(message != "Autorizzato") {
@@ -123,7 +124,7 @@ App = {
         App.contracts.IdChain.deployed().then(function(instance) {
           var form = document.deleteForm;
           var idChainInstance = instance;
-          return idChainInstance.deleteIdCard(form[0].value);
+          return idChainInstance.deleteIdCard(web3.sha3(form[0].value));
         }).then(function(response) {
           message = response;
           App.createLandingPage();
@@ -136,7 +137,7 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.renewForm;
       var idChainInstance = instance;
-      return idChainInstance.renewIdCard(form["password"].value);
+      return idChainInstance.renewIdCard(web3.sha3(form["password"].value));
     }).then(function(response) {
       message = response;
       App.createLoginPage();
@@ -188,7 +189,7 @@ App = {
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.authForm;
       var idChainInstance = instance;
-      return idChainInstance.authorize.call(form["password"].value);
+      return idChainInstance.authorize.call(web3.sha3(form["password"].value));
     }).then(function(response) {
       message = response;
       App.addInlineMessage(message);
