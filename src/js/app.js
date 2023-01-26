@@ -66,6 +66,10 @@ App = {
     //idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
     // Non metto gli id perché gli elementi hanno giá id a caso
     //idCardInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, form.elements[10].value);
+    var form = document.registrationForm;
+    if(form[10].value != form[11].value) {
+      return App.addInlineMessage("Le password non combaciano");
+    }
 
     App.contracts.IdChain.deployed().then(function(instance) {
       var form = document.registrationForm;
