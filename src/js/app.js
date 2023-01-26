@@ -145,6 +145,10 @@ App = {
 
   messageHandler: function(message) {
     var finalMessage;
+    if(typeof(message) == "object") {
+
+      return "La carta e' stata rimossa con successo.";
+    }
     switch(message) {
       // Errori
       case "errorPassword":
