@@ -71,9 +71,7 @@ contract IdChain is AccessControl {
     function createIdCard(string memory _name, string memory _surname,
      string memory _birthDate, string memory _birthPlace, string memory _fiscalCode,
       string memory _homeAddress, string memory _city, string memory _province,
-       string memory _cap, string memory _phone, string memory _password) public {
-        //require that the fiscalCode is not already registered
-        require(registeredCF[_fiscalCode] == address(0));
+       string memory _cap, string memory _phone, string memory _password) public returns (string memory){
         //Require a valid name
         require(bytes(_name).length > 0);
         //Require a valid surname
@@ -95,6 +93,14 @@ contract IdChain is AccessControl {
         //Require a valid phone
         require(bytes(_phone).length > 0);
 
+        //require that the fiscalCode is not already registered
+        if(registeredCF[_fiscalCode] != address(0)){
+            return "CFAlreadyRegistered";
+        }
+
+        //require(registeredCF[_fiscalCode] == address(0));
+
+
         //Increment IdCards Count
         idCardsCount ++;
 
@@ -110,6 +116,7 @@ contract IdChain is AccessControl {
 
         //Trigger an event
         emit createdIdCard(_name, _surname, _fiscalCode, dataScadenzaInt);
+        return "success";
     }
 
     //Delete an IdCard

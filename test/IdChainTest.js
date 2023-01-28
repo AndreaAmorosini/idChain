@@ -112,7 +112,7 @@ contract('IdChain', function(accounts) {
     it("check on dataScadenza recuperoDati", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.readIdCard("MRSNDR0022", sha256('password'), {from: accounts[2]});
+        return idChainInstance.readIdCard("MRSNDR0022", "0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b", {from: accounts[2]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);
         assert.equal(idCard, "expireCard", "il controllo è fallito");
@@ -123,7 +123,7 @@ contract('IdChain', function(accounts) {
     it("check on dataScadenza auth", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.authorize(sha256('password'), {from: accounts[2]});
+        return idChainInstance.authorize("0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b", {from: accounts[2]});
       }).then(function(result) {
         assert.equal(result, "expireCard", "il controllo è fallito");
       });
@@ -133,11 +133,11 @@ contract('IdChain', function(accounts) {
     it("check on rinnovoCarta", function() {
       return IdChain.deployed().then(function(instance) {
         idChainInstance = instance;
-        return idChainInstance.renewIdCard(sha256('password'), {from: accounts[2]});
+        return idChainInstance.renewIdCard("0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b", {from: accounts[2]});
       }).then(function(resultRenew) {
         //console.log("RESULT : " + resultRenew);
         //assert.equal(resultRenew, "Carta rinnovata con successo", "il rinnovo è fallito");
-        return idChainInstance.authorize(sha256('password'), {from: accounts[2]});
+        return idChainInstance.authorize("0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b", {from: accounts[2]});
       }).then(function(resultAuth){
         assert.equal(resultAuth, "Autorizzato", "il controllo è fallito");
       });
