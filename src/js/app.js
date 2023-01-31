@@ -53,8 +53,6 @@ App = {
 
   createIdCard: function() {
 
-    //idCardInstance.createIdCard(form.elements["name"].value, form.elements["surname"].value, form.elements["birthDate"].value, form.elements["birthPlace"].value, form.elements["cf"].value, form.elements["homeAddress"].value, form.elements["city"].value, form.elements["province"].value, form.elements["cap"].value, form.elements["phone"].value, form.elements["password"].value);
-
     var form = document.registrationForm;
     if(form[10].value != form[11].value) {
       message = "passwordNoMatch";
@@ -66,9 +64,15 @@ App = {
       var form = document.registrationForm;
       var idChainInstance = instance;
       return idChainInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, web3.sha3(form.elements[10].value));
-    }).then(function() {
-      message = "cardCreated";
-      return App.createLoginPage();
+    }).then(function(response) {
+      if(response=='success') {
+        message = "cardCreated";
+      else if(response=='CFAlreadyRegistered') {
+        message = 'CFAlreadyRegistered';
+      }
+        return App.createLoginPage();
+      }
+
     });
 
   },
@@ -153,30 +157,32 @@ App = {
     switch(message) {
       // Errori
       case "errorPassword":
-        finalMessage = "La password inserita non e' corretta.";
+        finalMessage = "La password inserita non é corretta.";
         break;
       case 'cardNotFound':
-        finalMessage = "La carta richiesta non e' stata trovata.";
+        finalMessage = "La carta richiesta non é stata trovata.";
         break;
       case 'expireCard':
-        finalMessage = "La carta e' scaduta, si prega di rinnovare la carta.";
+        finalMessage = "La carta é scaduta, si prega di rinnovare la carta.";
         break;
       case 'passwordNoMatch':
         finalMessage = "Le password non combaciano.";
         break;
+      case 'CFAlreadyRegistered':
+        finalMessage = "Il Codice Fiscale inserito é giá stato registrato.";
 
       // Successo
       case 'cardCreated':
-        finalMessage = "La carta e' stata creata con successo.";
+        finalMessage = "La carta é stata creata con successo.";
         break;
       case 'cardDeleteSuccess':
-        finalMessage = "La carta e' stata rimossa con successo.";
+        finalMessage = "La carta é stata rimossa con successo.";
         break;
       case 'Autorizzato':
         finalMessage = "Autorizzazione avvenuta con successo.";
         break;
       case 'cardRenewSuccess':
-        finalMessage = "La carta e' stata rinnovata con successo.";
+        finalMessage = "La carta é stata rinnovata con successo.";
         break;
       default:
         return null;
