@@ -65,14 +65,13 @@ App = {
       var idChainInstance = instance;
       return idChainInstance.createIdCard(form.elements[0].value, form.elements[1].value, form.elements[9].value, form.elements[8].value, form.elements[2].value, form.elements[4].value, form.elements[5].value, form.elements[6].value, form.elements[7].value, form.elements[3].value, web3.sha3(form.elements[10].value));
     }).then(function(response) {
-      if(response=='success') {
-        message = "cardCreated";
-      else if(response=='CFAlreadyRegistered') {
-        message = 'CFAlreadyRegistered';
-      }
+        if(response=='success') {
+          message = "cardCreated";
+        }
+        else if(response=='CFAlreadyRegistered') {
+          message = 'CFAlreadyRegistered';
+        }
         return App.createLoginPage();
-      }
-
     });
 
   },
