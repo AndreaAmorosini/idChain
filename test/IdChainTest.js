@@ -10,11 +10,11 @@ contract('IdChain', function(accounts) {
     done();
   });
 
-  it("initializes with idCount to 0", function() {
+  it("initializes with idCount to 1", function() {
     return IdChain.deployed().then(function(instance) {
         return instance.idCardsCount();
         }).then(function(idCardsCount) {
-            assert.equal(idCardsCount, 0, "idCardsCount is not 0");
+            assert.equal(idCardsCount, 1, "idCardsCount is not 0");
         });
     });
 
@@ -28,7 +28,7 @@ contract('IdChain', function(accounts) {
       }).then(function(receipt) {
         return idChainInstance.idCardsCount();
       }).then(function(idCardsCount) {
-        assert.equal(idCardsCount, 1, "idCount is not 1");
+        assert.equal(idCardsCount, 2, "idCount is not 2");
         return idChainInstance.readIdCard("MRSNDR0024CAV", sha256('password'), {from: accounts[1]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);
@@ -99,7 +99,7 @@ contract('IdChain', function(accounts) {
       }).then(function(receipt) {
         return idChainInstance.idCardsCount();
       }).then(function(idCardsCount) {
-        assert.equal(idCardsCount, 0, "idCount is not 0");
+        assert.equal(idCardsCount, 1, "idCount is not 1");
         return idChainInstance.readIdCard("MRSNDR0024CAV", sha256('password'), {from: accounts[1]});
       }).then(function(idCard) {
         console.log("IDCARD : " + idCard);

@@ -59,6 +59,7 @@ contract IdChain is AccessControl {
 
     constructor(){
         idCardsCount = 0;
+        idCardsCount++;
         //Crea una IdCard già scaduta per testare il controllo sulla data di scadenza
         idCards[0xCd3dAE09E94aad0bc8e2Bce8d5905384FE838c8E] = IdCard("Test", "Test1", "24/03/2000", "Avellino", "MRSNDR0022", "Via Via Via",
          "Avellino", "AV", "83100", "3311242336", 1642690626, "0xb68fe43f0d1a0d7aef123722670be50268e15365401c442f8806ef83b612976b");
